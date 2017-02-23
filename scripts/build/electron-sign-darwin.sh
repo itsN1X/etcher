@@ -26,42 +26,36 @@ if [[ "$OS" != "Darwin" ]]; then
 fi
 
 ./scripts/build/check-dependency.sh codesign
-./scripts/build/check-dependency.sh spctl
 
 function usage() {
   echo "Usage: $0"
   echo ""
   echo "Options"
   echo ""
-  echo "    -a <application (.app)>"
+  echo "    -f <file>"
   echo "    -i <identity>"
   exit 1
 }
 
-ARGV_APPLICATION=""
+ARGV_FILE=""
 ARGV_IDENTITY=""
 
-while getopts ":a:i:" option; do
+while getopts ":f:i:" option; do
   case $option in
-    a) ARGV_APPLICATION="$OPTARG" ;;
+    f) ARGV_FILE="$OPTARG" ;;
     i) ARGV_IDENTITY="$OPTARG" ;;
     *) usage ;;
   esac
 done
 
-if [ -z "$ARGV_APPLICATION" ] || [ -z "$ARGV_IDENTITY" ]; then
+if [ -z "$ARGV_FILE" ] || [ -z "$ARGV_IDENTITY" ]; then
   usage
 fi
 
 function sign_file() {
   local file=$1
-  ./scripts/build/electron-sign-file-darwin.sh -f "$file" -i "$ARGV_IDENTITY"
+  codesign --sign "$ARGV_IDENTITY" -fv "$file"
 }
-
-# Avoid issues with `for` loops on file names containing spaces
-# See https://www.cyberciti.biz/tips/handling-filenames-with-spaces-in-bash.html
-SAVEIFS=$IFS
-IFS=$(echo -en "\n\b")
 
 # Sign all executables
 # See http://apple.stackexchange.com/a/116371
