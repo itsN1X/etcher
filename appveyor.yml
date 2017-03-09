@@ -41,7 +41,7 @@ build: off
 test_script:
   - node --version
   - npm --version
-  - bash .\scripts\ci\ensure-staged-sass.sh
+  - npm run sanity-checks;
   - cmd: npm test
 
 notifications:
