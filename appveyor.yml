@@ -41,7 +41,7 @@ build: off
 test_script:
   - node --version
   - npm --version
-  - npm run sanity-checks
+  - npm run sanity-checks-windows
   - cmd: npm test
 
 notifications:
