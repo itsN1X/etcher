@@ -25,26 +25,33 @@ HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 PACKAGE_JSON=package.json
 
-declare -A MATCH_VERSIONS
-MATCH_VERSIONS["dependencies[\"angular\"]"]="devDependencies[\"angular-mocks\"]"
+# Two pair-wise arrays, because associative arrays only work in Bash 4
+PRIMARY_VERSIONS=("dependencies[\"angular\"]")
+SECONDARY_VERSIONS=("devDependencies[\"angular-mocks\"]")
 
 function check_locked {
     name=$1
     version=$2
     if [[ "$version" =~ ^\^ ]]; then
-        echo "Dependency: $name should be locked"
+        echo "Dependency: $name must be version-locked in $PACKAGE_JSON"
         exit 1
     fi
 }
 
-for primary in "${!MATCH_VERSIONS[@]}"; do
+if [[ ${#PRIMARY_VERSIONS[@]} -ne ${#SECONDARY_VERSIONS[@]} ]]; then
+    echo "Lengths of PRIMARY_VERSIONS and SECONDARY_VERSIONS arrays must match"
+    exit 1
+fi
+
+for i in ${!PRIMARY_VERSIONS[@]}; do
+    primary=${PRIMARY_VERSIONS[$i]}
     primary_version=$(jq -r ".$primary" "$PACKAGE_JSON")
     check_locked "$primary" "$primary_version"
-    secondary=${MATCH_VERSIONS[$primary]}
+    secondary=${SECONDARY_VERSIONS[$i]}
     secondary_version=$(jq -r ".$secondary" "$PACKAGE_JSON")
     check_locked "$secondary" "$secondary_version"
     if [[ "$primary_version" != "$secondary_version" ]]; then
-        echo "The following dependencies should have the exact same version:"
+        echo "The following dependencies must have the exact same version in $PACKAGE_JSON:"
         echo "    $primary"
         echo "    $secondary"
         exit 1
